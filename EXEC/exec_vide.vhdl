@@ -40,7 +40,6 @@ entity EXec is
 		dec_alu_xor : in Std_Logic;
 
 		exe_res : out Std_Logic_Vector(31 downto 0);
-		--exe_res_valid	: out Std_Logic;
 
 		--! Exe bypass to decod
 		exe_alu_res : out Std_Logic_Vector(31 downto 0);
@@ -96,14 +95,10 @@ architecture Behavior OF EXec is
 	signal op1 : std_logic_vector(31 downto 0);
 
 	--additionneur
--- 	signal alu_add : std_logic_vector(31 downto 0);
--- 	signal p : std_logic_vector(31 downto 0);
--- 	signal g : std_logic_vector(31 downto 0);
 	signal p4b : std_logic_vector(7 downto 0);
 	signal g4b : std_logic_vector(7 downto 0);
 	signal p16b : std_logic_vector(1 downto 0);
 	signal g16b : std_logic_vector(1 downto 0);
--- 	signal c : std_logic_vector(31 downto 0);
 
 	--resultats
 	signal add32 : std_logic_vector(31 downto 0);
@@ -113,24 +108,26 @@ architecture Behavior OF EXec is
 	signal alu_res : std_logic_vector(31 downto 0);
 
 begin
-	--! shifter result
-	op2_shift <=	op2_lsl when dec_shift_lsl = '1' else
-	dec_cy & dec_op2(31 downto 1) when dec_shift_rrx = '1' else
-	op2_right when dec_shift_asr = '1' or dec_shift_lsr = '1' or dec_shift_ror = '1' else
-	dec_op2;
+  exe_mem_data <= dec_mem_data;
+  exe_mem_dest <= dec_mem_dest;
+
+  exe_mem_lw <= dec_mem_lw;
+  exe_mem_lb <= dec_mem_lb;
+  exe_mem_sw <= dec_mem_sw;
+  exe_mem_sb <= dec_mem_sb;
 
 	--! LSL
 	with dec_shift_val select
-		op2_lsl <=	dec_op2(0) & X"0000000" & "000" when "11111",
-		dec_op2( 1 downto 0) & X"0000000" &  "00" when "11110",
-		dec_op2( 2 downto 0) & X"0000000" &   "0" when "11101",
-		dec_op2( 3 downto 0) & X"0000000" when "11100",
-		dec_op2( 4 downto 0) & X"000000" & "000" when "11011",
-		dec_op2( 5 downto 0) & X"000000" &  "00" when "11010",
-		dec_op2( 6 downto 0) & X"000000" &   "0" when "11001",
-		dec_op2( 7 downto 0) & X"000000"         when "11000",
-		dec_op2( 8 downto 0) & X"00000" & "000" when "10111",
-		dec_op2( 9 downto 0) & X"00000" &  "00" when "10110",
+		op2_lsl <= dec_op2(0) & X"0000000" & "000" when "11111",
+		dec_op2(1 downto 0) & X"0000000" &  "00" when "11110",
+		dec_op2(2 downto 0) & X"0000000" &   "0" when "11101",
+		dec_op2(3 downto 0) & X"0000000" when "11100",
+		dec_op2(4 downto 0) & X"000000" & "000" when "11011",
+		dec_op2(5 downto 0) & X"000000" &  "00" when "11010",
+		dec_op2(6 downto 0) & X"000000" &   "0" when "11001",
+		dec_op2(7 downto 0) & X"000000"         when "11000",
+		dec_op2(8 downto 0) & X"00000" & "000" when "10111",
+		dec_op2(9 downto 0) & X"00000" &  "00" when "10110",
 		dec_op2(10 downto 0) & X"00000" &   "0" when "10101",
 		dec_op2(11 downto 0) & X"00000"         when "10100",
 		dec_op2(12 downto 0) & X"0000" & "000" when "10011",
@@ -188,11 +185,6 @@ begin
 		"00" & dec_op2(31 downto 2) when "00010",
 		"0" & dec_op2(31 downto 1) when "00001",
 		dec_op2(31 downto 0) when others;
-
-
-	--carry decalage
-	shift_cy <= right_cy when dec_shift_lsr = '1' or dec_shift_asr = '1' or dec_shift_ror = '1' else dec_op2(0) when dec_shift_rrx = '1' else
-	left_cy;
 
 	--! right carry
 	with dec_shift_val select
@@ -337,7 +329,29 @@ begin
 		dec_op2(0) & dec_op2(31 downto 1) when "00001",
 		dec_op2(31 downto 0) when others;
 
+		op2_right <= op2_asr when dec_shift_asr = '1' else
+		op2_lsr when dec_shift_lsr = '1' else
+		op2_ror when dec_shift_ror = '1';
+
+		--! shifter result
+		op2_shift <= op2_lsl when dec_shift_lsl = '1' else
+		dec_cy & dec_op2(31 downto 1) when dec_shift_rrx = '1' else
+		op2_right when dec_shift_asr = '1' or dec_shift_lsr = '1' or dec_shift_ror = '1' else
+		dec_op2;
+
+		--carry decalage
+		shift_cy <= right_cy when dec_shift_lsr = '1' or dec_shift_asr = '1' or dec_shift_ror = '1' else
+		dec_op2(0) when dec_shift_rrx = '1' else
+		left_cy when dec_shift_lsl = '1' else
+		dec_cy;
+
 		op1 <= dec_op1;
+
+		and32 <= op1 and op2_shift when dec_alu_and = '1';
+		or32 <= op1 or op2_shift when dec_alu_or = '1';
+		xor32 <= op1 xor op2_shift when dec_alu_xor = '1';
+
+		exe_mem_adr <= alu_res;
 
 	--! Operations process
 	process(ck)
@@ -347,34 +361,10 @@ begin
 	variable cout1 : std_logic_vector(32 downto 0);
 	variable cout2 : std_logic_vector(31 downto 0);
 	variable cout : std_logic_vector(32 downto 0);
-
-	variable p : std_logic_vector(31 downto 0);
-	variable g : std_logic_vector(31 downto 0);
-	variable c : std_logic_vector(31 downto 0);
-	variable alu_add : std_logic_vector(31 downto 0);
 	begin
 		if rising_edge(ck) then
-			if reset_n = '0' then
-				exe_res <= X"00000000";
-			end if;
-
 			if dec_alu_add = '1' then
--- 				p := op1 or op2_shift;
--- 				g := op1 and op2_shift;
---
--- 				c(0) := dec_alu_cy;
---
--- 				for i in 0 to 30 loop
--- 					c(i + 1) := g(i) or (p(i) and c(i));
--- 				end loop;
---
--- 				alu_add := (op1 xor op2_shift) xor c;
--- 				exe_res <= alu_add;
-
-				cout(0) := dec_alu_cy;
-
-				report "dec_op1 = " & std_logic'image(dec_op1(0));
-				report "dec_op2 = " & std_logic'image(dec_op2(0));
+				cout(0) := shift_cy;
 
 				for i in 0 to 31 loop
 					sout1(i) := op1(i) xor op2_shift(i);
@@ -385,63 +375,21 @@ begin
 					cout2(i) := cout(i) and sout1(i);
 
 					cout(i + 1) := cout1(i) or cout2(i);
-
-					report "cout(" & integer'image(i)  & ") = " & std_logic'image(cout(i));
-					report "op1(" & integer'image(i) & ") = " & std_logic'image(op1(i));
-					report "op2_shift(" & integer'image(i) & ") = " & std_logic'image(op2_shift(i));
-
-					report "sout1(" & integer'image(i) & ") = " & std_logic'image(sout1(i));
-					report "cout1(" & integer'image(i) & ") = " & std_logic'image(cout1(i));
-					report "cout2(" & integer'image(i) & ") = " & std_logic'image(cout2(i));
-
-					report "sout(" & integer'image(i) & ") = " & std_logic'image(sout(i));
-					report "cout(" & integer'image(i + 1)  & ") = " & std_logic'image(cout(i + 1));
-					report "";
 				end loop;
 
-				exe_res <= sout;
-				--p4b
-				p4b(0) <= p(0) or p(1) or p(2) or p(3);
-				p4b(1) <= p(4) or p(5) or p(6) or p(7);
-				p4b(2) <= p(8) or p(9) or p(10) or p(11);
-				p4b(3) <= p(12) or p(13) or p(14) or p(15);
-				p4b(4) <= p(16) or p(17) or p(18) or p(19);
-				p4b(5) <= p(20) or p(21) or p(22) or p(23);
-				p4b(6) <= p(24) or p(25) or p(26) or p(27);
-				p4b(7) <= p(28) or p(29) or p(30) or p(31);
-
-				--g4b
-				g4b(0) <= g(0) and g(1) and g(2) and g(3);
-				g4b(1) <= g(4) and g(5) and g(6) and g(7);
-				g4b(2) <= g(8) and g(9) and g(10) and g(11);
-				g4b(3) <= g(12) and g(13) and g(14) and g(15);
-				g4b(4) <= g(16) and g(17) and g(18) and g(19);
-				g4b(5) <= g(20) and g(21) and g(22) and g(23);
-				g4b(6) <= g(24) and g(25) and g(26) and g(27);
-				g4b(7) <= g(28) and g(29) and g(30) and g(31);
-
-				--p16b
-				p16b(0) <= p4b(0) or p4b(1) or p4b(2) or p4b(3);
-				p16b(1) <= p4b(4) or p4b(5) or p4b(6) or p4b(7);
-
-				--g16b
-				g16b(0) <= g4b(0) and g4b(1) and g4b(2) and g4b(3);
-				g16b(1) <= g4b(4) and g4b(5) and g4b(6) and g4b(7);
-			end if;
-
-			if dec_alu_and = '1' then
-				exe_res <= op2_shift and dec_op1;
-			end if;
-
-			if dec_alu_or = '1' then
-				exe_res <= op2_shift or dec_op1;
-			end if;
-
-			if dec_alu_xor = '1' then
-				exe_res <= op2_shift xor dec_op1;
+				add32 <= sout;
 			end if;
 		end if;
 	end process;
+
+	alu_res <= add32 when dec_alu_add = '1' else
+	or32 when dec_alu_or = '1' else
+	and32 when dec_alu_and = '1' else
+	xor32 when dec_alu_xor = '1' else
+	X"00000000" when reset_n = '0';
+
+	exe_res <= alu_res;
+	exe_alu_res <= alu_res;
 
 	--! Flags process
 	process(ck) begin

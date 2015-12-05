@@ -16,6 +16,7 @@ exec :	exec_tb
 
 clean : clean_o
 	ghdl --remove
+	rm exec.vcd
 
 clean_o :
 	ghdl --clean
