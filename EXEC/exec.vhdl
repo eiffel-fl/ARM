@@ -345,7 +345,13 @@ begin
 		left_cy when dec_shift_lsl = '1' else
 		dec_cy;
 
-		op1 <= dec_op1;
+		--complement
+		op1 <= (not dec_op1) xor X"00000001" when dec_comp_op1 = '1' else
+			X"00000000" when dec_zero_op1 = '1' else
+			dec_op1;
+		-- U sur op2_shift quand complémenter, il faut tracer
+-- 		op2_shift <= (not op2_shift) xor X"00000001" when dec_comp_op2 = '1' else
+-- 			op2_shift;
 
 		and32 <= op1 and op2_shift when dec_alu_and = '1';
 		or32 <= op1 or op2_shift when dec_alu_or = '1';

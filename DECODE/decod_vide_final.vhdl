@@ -18,12 +18,12 @@ entity Decod is
 			dec_mem_sb		: out Std_Logic;
 
 	-- Shifter command
-			dec_shift_lsl	: out Std_Logic;
-			dec_shift_lsr	: out Std_Logic;
-			dec_shift_asr	: out Std_Logic;
-			dec_shift_ror	: out Std_Logic;
-			dec_shift_rrx	: out Std_Logic;
-			dec_shift_val	: out Std_Logic_Vector(4 downto 0);
+			dec_shift_lsl : out Std_Logic;
+			dec_shift_lsr : out Std_Logic;
+			dec_shift_asr : out Std_Logic;
+			dec_shift_ror : out Std_Logic;
+			dec_shift_rrx : out Std_Logic;
+			dec_shift_val : out Std_Logic_Vector(4 downto 0);
 			dec_cy			: out Std_Logic;
 
 	-- Alu operand selection
@@ -74,6 +74,7 @@ architecture Behavior OF Decod is
 signal cond	: Std_Logic;
 signal cond_en	: Std_Logic;
 
+--décodage du type d'instruction
 signal regop_t  : Std_Logic;
 signal mult_t   : Std_Logic;
 signal swap_t   : Std_Logic;
@@ -82,26 +83,26 @@ signal mtrans_t : Std_Logic;
 signal branch_t : Std_Logic;
 
 -- regop instructions
-signal and_i  : Std_Logic;
-signal eor_i  : Std_Logic;
-signal sub_i  : Std_Logic;
-signal rsb_i  : Std_Logic;
-signal add_i  : Std_Logic;
-signal adc_i  : Std_Logic;
-signal sbc_i  : Std_Logic;
-signal rsc_i  : Std_Logic;
-signal tst_i  : Std_Logic;
-signal teq_i  : Std_Logic;
-signal cmp_i  : Std_Logic;
-signal cmn_i  : Std_Logic;
-signal orr_i  : Std_Logic;
-signal mov_i  : Std_Logic;
-signal bic_i  : Std_Logic;
-signal mvn_i  : Std_Logic;
+signal and_i : Std_Logic;
+signal eor_i : Std_Logic;
+signal sub_i : Std_Logic;
+signal rsb_i : Std_Logic;
+signal add_i : Std_Logic;
+signal adc_i : Std_Logic;
+signal sbc_i : Std_Logic;
+signal rsc_i : Std_Logic;
+signal tst_i : Std_Logic;
+signal teq_i : Std_Logic;
+signal cmp_i : Std_Logic;
+signal cmn_i : Std_Logic;
+signal orr_i : Std_Logic;
+signal mov_i : Std_Logic;
+signal bic_i : Std_Logic;
+signal mvn_i : Std_Logic;
 
 -- mult instruction
-signal mul_i  : Std_Logic;
-signal mla_i  : Std_Logic;
+signal mul_i : Std_Logic;
+signal mla_i : Std_Logic;
 
 -- trans instruction
 signal ldr_i  : Std_Logic;
@@ -119,19 +120,19 @@ signal bl_i   : Std_Logic;
 
 -- RF
 type rf_array is array(14 downto 0) of std_logic_vector(31 downto 0);
-signal r_reg	: rf_array;
-signal r 		: rf_array;
+signal r_reg	: rf_array; --vrai registre
+signal r 		: rf_array; --"sortie" : on choisit entre le vrai registre et le bypass
 
-signal r_valid : Std_Logic_Vector(13 downto 0);
+signal r_valid : Std_Logic_Vector(14 downto 0);
 
 signal r_dest_reg : Std_Logic_Vector(3 downto 0);
 signal r_dest_we_reg : Std_Logic;
-signal s_set_reg : Std_Logic;
+signal s_set_reg : Std_Logic; --flag S ou non ?
 
-signal load_r : Std_Logic;
-signal mtrans_list : Std_Logic_Vector(14 downto 0);
-signal mtrans_list_reg : Std_Logic_Vector(14 downto 0);
-signal list_cy : Std_Logic_Vector(13 downto 0);
+signal load_r : Std_Logic; --load ou store
+signal mtrans_list : Std_Logic_Vector(15 downto 0);
+signal mtrans_list_reg : Std_Logic_Vector(15 downto 0);
+signal list_cy : Std_Logic_Vector(14 downto 0);
 
 -- RF read ports
 signal rf_op1 : Std_Logic_Vector(31 downto 0);
@@ -143,15 +144,15 @@ signal rf_radr2 : Std_Logic_Vector(3 downto 0);
 signal rf_radr3 : Std_Logic_Vector(3 downto 0);
 
 -- Flags
-signal n_reg : Std_Logic;
-signal z_reg : Std_Logic;
-signal c_reg : Std_Logic;
-signal v_reg : Std_Logic;
+signal n_reg : Std_Logic; --les registres
+signal z_reg : Std_Logic; --les registres
+signal c_reg : Std_Logic; --les registres
+signal v_reg : Std_Logic; --les registres
 
-signal n : Std_Logic;
-signal z : Std_Logic;
-signal c : Std_Logic;
-signal v : Std_Logic;
+signal n : Std_Logic; --registre ou bypass
+signal z : Std_Logic; --registre ou bypass
+signal c : Std_Logic; --registre ou bypass
+signal v : Std_Logic; --registre ou bypass
 
 -- Operand
 
@@ -167,6 +168,8 @@ signal fset : Std_Logic;
 
 type state_type is (RUN, BRANCH, FETCH, MTRANS, MUL, OPWAIT, PCADR, PCLOAD, SWAP);
 signal cur_state, next_state : state_type;
+
+signal opok : Std_Logic;
 
 begin
 
@@ -200,19 +203,19 @@ begin
 	if rising_edge(ck) then
 
 		if mem_commit = '1' and (r_dest_we_reg = '0' or (r_dest_reg /= mem_commit_reg)) then
-			r(to_integer(unsigned (mem_commit_reg))) <= mem_commit_val;
+			r_reg(to_integer(unsigned (mem_commit_reg))) <= mem_commit_val;
 			r_valid(to_integer(unsigned (mem_commit_reg))) <= '1';
 		end if;
 
 		if r_dest_we_reg = '1' then
-			r(to_integer(unsigned (r_dest_reg))) <= exe_alu_res;
-			r_valid(to_integer(unsigned(r_dest_reg))) <= '1';
+			r_reg(to_integer(unsigned (r_dest_reg))) <= exe_alu_res;
+			--r_valid(to_integer(unsigned(r_dest_reg))) <= '1';
 		end if;
 
 		if reset_n = '0' then
-			r_valid <= "11111111111111";
+			r_valid <= "111111111111111";
 		elsif load_r = '1' then
-			r_valid(to_integer(unsigned (r_dest_reg))) <= '0';
+			r_valid(to_integer(unsigned (r_dest_reg))) <= '0'; --load sur un registre alors on passe son r_valid à 0
 		end if;
 
 		if s_set_reg = '1' then
@@ -227,7 +230,7 @@ end process;
 
 -- Execution condition
 
-	cond <= '1' when	(if_ir(31 downto 28) = X"0" and z = '1') or
+	cond <= '1' when (if_ir(31 downto 28) = X"0" and z = '1') or
 							(if_ir(31 downto 28) = X"1" and z = '0') or
 							(if_ir(31 downto 28) = X"2" and c = '1') or
 							(if_ir(31 downto 28) = X"3" and c = '0') or
@@ -247,10 +250,32 @@ end process;
 
 	regop_t <= '1' when	if_ir(27 downto 26) = "00" and
 								mult_t = '0' and swap_t = '0' else '0';
+	mult_t <= '1' when if_ir(27 downto 22) = "000000" else '0';
+	swap_t <= '1' when if_ir(27 downto 23) = "00010" else '0';
+	trans_t <= '1' when if_ir(27 downto 26) = "01" else '0';
+	mtrans_t <= '1' when if_ir(27 downto 26) = "10" else '0';
+	branch_t <= '1' when if_ir(27 downto 25) = "101" else '0';
+
+	--mult_t, swap_t, trans_t, mtrans_t, branch_t
+	--faire pour les autres types d'op
 -- decod regop opcode
 
 	and_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"0" else '0';
 	eor_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"1" else '0';
+	sub_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"2" else '0';
+	rsb_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"3" else '0';
+	add_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"4" else '0';
+	adc_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"5" else '0';
+	sbc_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"6" else '0';
+	rsc_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"7" else '0';
+	tst_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"8" else '0';
+	teq_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"9" else '0';
+	cmp_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"A" else '0';
+	cmn_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"B" else '0';
+	orr_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"C" else '0';
+	mov_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"D" else '0';
+	bic_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"E" else '0';
+	mvn_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"F" else '0';
 
 -- mult instruction
 	mul_i <= '1' when mult_t = '1' and if_ir(21) = '0' else '0';
@@ -258,12 +283,17 @@ end process;
 
 -- trans instruction
 	ldr_i  <= '1' when trans_t = '1' and if_ir(22) = '0' and if_ir(20) = '1' else '0';
+  str_i  <= '1' when trans_t = '1' and if_ir(22) = '0' and if_ir(20) = '0' else '0';
+	ldrb_i <= '1' when trans_t = '1' and if_ir(22) = '1' and if_ir(20) = '1' else '0';
+	strb_i <= '1' when trans_t = '1' and if_ir(22) = '1' and if_ir(20) = '0' else '0';
 
 -- mtrans instruction
 	stm_i <= '1' when mtrans_t = '1' and if_ir(20) = '0' else '0';
+	ldm_i_i <= '1' when mtrans_t = '1' and if_ir(20) = '1' else '0';
 
 -- branch instruction
 	b_i  <= '1' when branch_t = '1' and if_ir(24) = '0' else '0';
+  bl_i <= '1' when branch_t = '1' and if_ir(24) = '1' else '0';
 
 -- Shifter command
 	process (ck)
@@ -275,9 +305,14 @@ end process;
 			dec_shift_asr <= '0';
 			dec_shift_ror <= '0';
 			dec_shift_rrx <= '0';
-
 		end if;
 	end process;
+
+	dec_shift_lsl <= '1' when regop_t = '1' and if_ir(6 downto 5) = X"0" else '0';
+	dec_shift_lsr <= '1' when regop_t = '1' and if_ir(6 downto 5) = X"1" else '0';
+	dec_shift_asr <= '1' when regop_t = '1' and if_ir(6 downto 5) = X"2" else '0';
+	dec_shift_ror <= '1' when regop_t = '1' and if_ir(6 downto 5) = X"3" and if_ir(11 downto 7) /= X"0" else '0';
+	dec_shift_rrx <= '1' when regop_t = '1' and if_ir(6 downto 5) = X"3" and if_ir(11 downto 7) = X"0" else '0';
 
 -- Alu operand selection
 	process (ck)
@@ -288,10 +323,21 @@ end process;
 			dec_zero_op1	<= '0';
 			dec_alu_cy 		<= '0';
 
-			if (i_rsb = '1' or i_rsc = '1') then
+			if (rsb_i = '1' or rsc_i = '1') then
 				dec_comp_op1 <= '1';
 			end if;
 
+			if(sbc_i = '1' or sub_i = '1' or bic_i = '1' or cmp_i = '1') then
+				dec_comp_op2 <= '1';
+			end if;
+
+			if(mov_i = '1' or mvn_i = '1') then
+				dec_zero_op1 <= '1';
+			end if;
+
+			if(rsc_i = '1' or adc_i = '1' or sbc_i = '1') then
+				dec_alu_cy <= '1';
+			end if;
 		end if;
 	end process;
 
@@ -302,11 +348,21 @@ end process;
 			dec_alu_and <= '0';
 			dec_alu_or  <= '0';
 			dec_alu_xor <= '0';
-			dec_alu_add	<= '1';
+			dec_alu_add <= '1';
 
 			if (eor_i = '1' or teq_i = '1') then
 				dec_alu_xor <= '1';
-				dec_alu_add	<= '0';
+				dec_alu_add <= '0';
+			end if;
+
+			if(and_i = '1' or tst_i = '1' or bic_i = '1') then
+				dec_alu_and <= '1';
+				dec_alu_add <= '0';
+			end if;
+
+			if(orr_i = '1' or mov_i = '1' or mvn_i = '1') then
+				dec_alu_or <= '1';
+				dec_alu_add <= '0';
 			end if;
 		end if;
 	end process;
@@ -328,7 +384,7 @@ end process;
 
 	process (ck)
 	begin
-		if (rising_edge(clk)) then
+		if (rising_edge(ck)) then
 
 			if (next_state = RUN and ldr_i = '1') or
 				((next_state = MTRANS or cur_state = MTRANS) and ldm_i = '1') then
@@ -336,8 +392,6 @@ end process;
 			else
 				dec_mem_lw <= '0';
 			end if;
-
-
 		end if;
 	end process;
 
@@ -351,19 +405,18 @@ end process;
 -- decod reg pipe
 -- output to exec
 
-	dec_op1 <= op1;
-	dec_op2 <= op2;
-	dec_op3 <= op3;
+	dec_op1 <= op1_reg;
+	dec_op2 <= op2_reg;
 
 	dec_dest <= dest;
-	dec_fest <= fset;
+	dec_fset <= fset;
 
 -- FSM
 
 process (ck)
 begin
 
-if (rising_edge(clk)) then
+if (rising_edge(ck)) then
 	if (reset_n = '0') then
 		cur_state <= FETCH;
 	else
@@ -374,7 +427,7 @@ end if;
 end process;
 
 --state machine process.
-process (cur_state, branch_t, mtrans_t, mul_t, opok)
+process (cur_state, branch_t, mtrans_t, mult_t, opok)
 begin
 	case cur_state is
 	when FETCH =>
@@ -389,8 +442,6 @@ begin
 
 	when BRANCH =>
 
-	when FETCH =>
-
 	when SWAP =>
 
 	when MTRANS =>
@@ -399,8 +450,7 @@ begin
 
 	when PCLOAD =>
 
-	when MTRANS =>
-
+	when MUL =>
 	end case;
 end process;
 

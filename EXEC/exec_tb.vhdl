@@ -213,10 +213,13 @@ begin
 		dec_shift_rrx <= '0';
 		dec_shift_val <= "00000";
 
-		dec_alu_or <= '1';
+		dec_alu_add <= '1';
 		dec_alu_cy <= '0';
-		dec_op1 <= x"00000000";
-		dec_op2 <= x"00000001";
+
+		dec_comp_op1 <= '1';
+
+		dec_op1 <= x"0000000F";
+		dec_op2 <= x"00000000";
 		ck <= '1';
 
 		wait for 2 ns;
