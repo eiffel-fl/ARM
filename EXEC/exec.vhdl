@@ -350,12 +350,12 @@ begin
 			X"00000000" when dec_zero_op1 = '1' else
 			dec_op1;
 		-- U sur op2_shift quand complémenter, il faut tracer
--- 		op2_shift <= (not op2_shift) xor X"00000001" when dec_comp_op2 = '1' else
--- 			op2_shift;
+		op2 <= (not op2_shift) xor X"00000001" when dec_comp_op2 = '1' else
+			op2_shift;
 
-		and32 <= op1 and op2_shift when dec_alu_and = '1';
-		or32 <= op1 or op2_shift when dec_alu_or = '1';
-		xor32 <= op1 xor op2_shift when dec_alu_xor = '1';
+		and32 <= op1 and op2 when dec_alu_and = '1';
+		or32 <= op1 or op2 when dec_alu_or = '1';
+		xor32 <= op1 xor op2 when dec_alu_xor = '1';
 
 		exe_mem_adr <= alu_res;
 
@@ -373,9 +373,9 @@ begin
 				cout(0) := shift_cy;
 
 				for i in 0 to 31 loop
-					sout1(i) := op1(i) xor op2_shift(i);
+					sout1(i) := op1(i) xor op2(i);
 
-					cout1(i) := op1(i) and op2_shift(i);
+					cout1(i) := op1(i) and op2(i);
 
 					sout(i) := cout(i) xor sout1(i);
 					cout2(i) := cout(i) and sout1(i);

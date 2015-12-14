@@ -253,11 +253,9 @@ end process;
 	mult_t <= '1' when if_ir(27 downto 22) = "000000" else '0';
 	swap_t <= '1' when if_ir(27 downto 23) = "00010" else '0';
 	trans_t <= '1' when if_ir(27 downto 26) = "01" else '0';
-	mtrans_t <= '1' when if_ir(27 downto 26) = "10" else '0';
 	branch_t <= '1' when if_ir(27 downto 25) = "101" else '0';
+	mtrans_t <= '1' when if_ir(27 downto 26) = "10" else '0';
 
-	--mult_t, swap_t, trans_t, mtrans_t, branch_t
-	--faire pour les autres types d'op
 -- decod regop opcode
 
 	and_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"0" else '0';
