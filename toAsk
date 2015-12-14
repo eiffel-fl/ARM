@@ -1,0 +1,5 @@
+dec_alu_cy : carry d'entrée de l'alu ???
+Comment détecter l'overflow ?
+Comment son utiliser les condtions ?
+Comment récupérer le numéro d'un registre pour les décalages ?
+Comment détecter les opérations sur PC ?

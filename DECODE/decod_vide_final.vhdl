@@ -132,6 +132,7 @@ signal s_set_reg : Std_Logic; --flag S ou non ?
 signal load_r : Std_Logic; --load ou store
 signal mtrans_list : Std_Logic_Vector(15 downto 0);
 signal mtrans_list_reg : Std_Logic_Vector(15 downto 0);
+signal mtrans_next_reg : Std_Logic_Vector(3 downto 0);
 signal list_cy : Std_Logic_Vector(14 downto 0);
 
 -- RF read ports
@@ -170,6 +171,7 @@ type state_type is (RUN, BRANCH, FETCH, MTRANS, MUL, OPWAIT, PCADR, PCLOAD, SWAP
 signal cur_state, next_state : state_type;
 
 signal opok : Std_Logic;
+signal mulok : Std_Logic;
 
 begin
 
@@ -287,7 +289,7 @@ end process;
 
 -- mtrans instruction
 	stm_i <= '1' when mtrans_t = '1' and if_ir(20) = '0' else '0';
-	ldm_i_i <= '1' when mtrans_t = '1' and if_ir(20) = '1' else '0';
+	ldm_i <= '1' when mtrans_t = '1' and if_ir(20) = '1' else '0';
 
 -- branch instruction
 	b_i  <= '1' when branch_t = '1' and if_ir(24) = '0' else '0';
@@ -311,6 +313,10 @@ end process;
 	dec_shift_asr <= '1' when regop_t = '1' and if_ir(6 downto 5) = X"2" else '0';
 	dec_shift_ror <= '1' when regop_t = '1' and if_ir(6 downto 5) = X"3" and if_ir(11 downto 7) /= X"0" else '0';
 	dec_shift_rrx <= '1' when regop_t = '1' and if_ir(6 downto 5) = X"3" and if_ir(11 downto 7) = X"0" else '0';
+
+	dec_shift_val <= if_ir(11 downto 7) when regop_t = '1' and if_ir(4) = '0' else
+		--registerNumber(if_ir(11 downto 8)) when regop_t = '1' and if_ir(4) = '1' else
+		X"0" & '0';
 
 -- Alu operand selection
 	process (ck)
@@ -372,7 +378,7 @@ end process;
 -- Mtrans reg list
 
 	list_cy(0) <= mtrans_list_reg(0);
-	mtrans_next_reg <=	X"0" when mtrans_list(0) = '1' else
+	mtrans_next_reg <= X"0" when mtrans_list(0) = '1' else
 								X"1" when mtrans_list(1) = '1' else
 								X"2" when mtrans_list(2) = '1' else
 								X"3" when mtrans_list(3) = '1' else
@@ -404,10 +410,12 @@ end process;
 -- output to exec
 
 	dec_op1 <= op1_reg;
-	dec_op2 <= op2_reg;
+	dec_op2 <= X"00" & if_ir(23 downto 0) when branch_t = '1' else --offset branchement
+		X"000000" & if_ir(7 downto 0) when if_ir(25) = '1' and regop_t = '1' else --immediat
+		op2_reg;
 
-	dec_dest <= dest;
-	dec_fset <= fset;
+-- 	dec_dest <= dest;
+-- 	dec_fset <= fset;
 
 -- FSM
 
@@ -425,31 +433,102 @@ end if;
 end process;
 
 --state machine process.
-process (cur_state, branch_t, mtrans_t, mult_t, opok)
+process (cur_state, branch_t, mtrans_t, mult_t, swap_t, opok)
 begin
 	case cur_state is
 	when FETCH =>
 		next_state <= RUN;
 
 	when RUN =>
+		if opok = '1' then
+			next_state <= RUN;
+		else
+			next_state <= OPWAIT;
+		end if;
+
+		if branch_t = '1' then
+			next_state <= BRANCH;
+		end if;
+
+		if mult_t = '1' then
+			next_state <= MUL;
+		end if;
+
+		if mtrans_t = '1' then
+			next_state <= MTRANS;
+		end if;
+
+		if swap_t = '1' then
+			next_state <= SWAP;
+		end if;
+
+		--LPC
 
 	when OPWAIT =>
 		if opok = '0' then
 			next_state <= OPWAIT;
 		end if;
 
+		if opok = '1' and mtrans_t = '1' then
+			next_state <= MTRANS;
+		end if;
+
+		if opok = '1' and branch_t = '1' then
+			next_state <= MTRANS;
+		end if;
+
+		if opok = '1' and mult_t = '1' then
+			next_state <= MTRANS;
+		end if;
+
+		--LPC
+
+		if opok = '1' then
+			next_state <= RUN;
+		end if;
+
 	when BRANCH =>
+		next_state <= FETCH;
 
 	when SWAP =>
 
 	when MTRANS =>
+		if mtrans_t = '1' then -- /!\
+			next_state <= MTRANS;
+		end if;
 
-	when PCADR =>
+		if opok = '0' then
+			next_state <= OPWAIT;
+		else
+			next_state <= RUN;
+		end if;
+
+		--LPC
+
+	when PCADR => -- à quoi donc sert-il ?
+		next_state <= PCLOAD;
 
 	when PCLOAD =>
+		next_state <= FETCH;
 
 	when MUL =>
+		if mulOk = '0' then
+			next_state <= MUL;
+		end if;
+
+		if mulOk = '1' and branch_t = '1' then
+			next_state <= BRANCH;
+		end if;
+
+		if mulOk = '1' then
+			next_state <= RUN;
+		end if;
 	end case;
+end process;
+
+--Multiplication
+process(ck)
+begin
 end process;
 
 end Behavior;

@@ -256,7 +256,7 @@ begin
 		dec_op2(31) when "00001",
 		dec_cy when others;
 
-	--! extension du but de signe de op2 pour le décalage arithmétique
+	--! extension du bit de signe de op2 pour le décalage arithmétique
 	sign_op2 <= x"ffffffff" when dec_op2(31) = '1' else x"00000000";
 
 	--! ASR
@@ -330,32 +330,33 @@ begin
 		dec_op2(31 downto 0) when others;
 
 		op2_right <= op2_asr when dec_shift_asr = '1' else
-		op2_lsr when dec_shift_lsr = '1' else
-		op2_ror when dec_shift_ror = '1';
+			op2_lsr when dec_shift_lsr = '1' else
+			op2_ror when dec_shift_ror = '1' else
+			'0';
 
 		--! shifter result
 		op2_shift <= op2_lsl when dec_shift_lsl = '1' else
-		dec_cy & dec_op2(31 downto 1) when dec_shift_rrx = '1' else
-		op2_right when dec_shift_asr = '1' or dec_shift_lsr = '1' or dec_shift_ror = '1' else
-		dec_op2;
+			dec_cy & dec_op2(31 downto 1) when dec_shift_rrx = '1' else
+			op2_right when dec_shift_asr = '1' or dec_shift_lsr = '1' or dec_shift_ror = '1' else
+			dec_op2;
 
 		--carry decalage
 		shift_cy <= right_cy when dec_shift_lsr = '1' or dec_shift_asr = '1' or dec_shift_ror = '1' else
-		dec_op2(0) when dec_shift_rrx = '1' else
-		left_cy when dec_shift_lsl = '1' else
-		dec_cy;
+			dec_op2(0) when dec_shift_rrx = '1' else
+			left_cy when dec_shift_lsl = '1' else
+			dec_cy;
 
 		--complement
 		op1 <= (not dec_op1) xor X"00000001" when dec_comp_op1 = '1' else
 			X"00000000" when dec_zero_op1 = '1' else
 			dec_op1;
-		-- U sur op2_shift quand complémenter, il faut tracer
 		op2 <= (not op2_shift) xor X"00000001" when dec_comp_op2 = '1' else
 			op2_shift;
 
-		and32 <= op1 and op2 when dec_alu_and = '1';
-		or32 <= op1 or op2 when dec_alu_or = '1';
-		xor32 <= op1 xor op2 when dec_alu_xor = '1';
+		--operations simples
+		and32 <= op1 and op2 when dec_alu_and = '1' else '0';
+		or32 <= op1 or op2 when dec_alu_or = '1' else '0';
+		xor32 <= op1 xor op2 when dec_alu_xor = '1' else '0';
 
 		exe_mem_adr <= alu_res;
 
@@ -384,15 +385,18 @@ begin
 				end loop;
 
 				add32 <= sout;
+				exe_c <= cout(32);
+				exe_v <= cout(32) xor cout(31);
 			end if;
 		end if;
 	end process;
 
 	alu_res <= add32 when dec_alu_add = '1' else
-	or32 when dec_alu_or = '1' else
-	and32 when dec_alu_and = '1' else
-	xor32 when dec_alu_xor = '1' else
-	X"00000000" when reset_n = '0';
+		or32 when dec_alu_or = '1' else
+		and32 when dec_alu_and = '1' else
+		xor32 when dec_alu_xor = '1' else
+		X"00000000" when reset_n = '0' else
+		X"00000000";
 
 	exe_res <= alu_res;
 	exe_alu_res <= alu_res;
@@ -407,10 +411,6 @@ begin
 			if alu_res = X"00000000" then
 				exe_z <= '1';
 			end if;
-
-			--if alu_res = '' then
-				--exe_v <=
-			--end if;
 		end if;
 	end process;
 end Behavior;
