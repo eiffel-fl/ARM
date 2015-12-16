@@ -1,5 +1,7 @@
 dec_alu_cy : carry d'entrée de l'alu ???
-Comment détecter l'overflow ?
-Comment son utiliser les condtions ?
-Comment récupérer le numéro d'un registre pour les décalages ?
+Où mettre l'offset d'un branchement ?
+Comment sont utilisé les condtions ?
+	si condition ok alors lancer op
+	sinon lancer nop
 Comment détecter les opérations sur PC ?
+	voir si numéro de registre est 15

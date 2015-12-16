@@ -157,7 +157,6 @@ signal v : Std_Logic; --registre ou bypass
 
 -- Operand
 
-
 signal op1_reg : Std_Logic_Vector(31 downto 0);
 signal op2_reg : Std_Logic_Vector(31 downto 0);
 signal op3_reg : Std_Logic_Vector(31 downto 0); -- data to mem
@@ -211,7 +210,7 @@ begin
 
 		if r_dest_we_reg = '1' then
 			r_reg(to_integer(unsigned (r_dest_reg))) <= exe_alu_res;
-			--r_valid(to_integer(unsigned(r_dest_reg))) <= '1';
+			r_valid(to_integer(unsigned(r_dest_reg))) <= '1';
 		end if;
 
 		if reset_n = '0' then
@@ -315,8 +314,10 @@ end process;
 	dec_shift_rrx <= '1' when regop_t = '1' and if_ir(6 downto 5) = X"3" and if_ir(11 downto 7) = X"0" else '0';
 
 	dec_shift_val <= if_ir(11 downto 7) when regop_t = '1' and if_ir(4) = '0' else
-		--registerNumber(if_ir(11 downto 8)) when regop_t = '1' and if_ir(4) = '1' else
+		r_reg(to_integer(signed(if_ir(11 downto 8))))(4 downto 0) when regop_t = '1' and if_ir(4) = '1' else
 		X"0" & '0';
+	--r_reg(to_integer(signed(if_ir(11 downto 8))))(4 downto 0), cast de if_ir en entier pour récupérer le bon numéro de registre.
+	--Ensuite les 5 bits de poids faible contenus dans le registre sont mis dans dec_shift_val
 
 -- Alu operand selection
 	process (ck)
@@ -377,12 +378,16 @@ end process;
 
 -- Mtrans reg list
 
+	mtrans_list <= if_ir(15 downto 0) when mtrans_t = '1' else
+		X"0000";
+
 	list_cy(0) <= mtrans_list_reg(0);
 	mtrans_next_reg <= X"0" when mtrans_list(0) = '1' else
 								X"1" when mtrans_list(1) = '1' else
 								X"2" when mtrans_list(2) = '1' else
 								X"3" when mtrans_list(3) = '1' else
 								X"4" when mtrans_list(4) = '1';
+								--à compléter ???
 
 -- Decod to mem via exec
 
@@ -462,7 +467,9 @@ begin
 			next_state <= SWAP;
 		end if;
 
-		--LPC
+		if (rf_radr1 = X"F" or rf_radr2 = X"F") then
+			next_state <= PCADR;
+		end if;
 
 	when OPWAIT =>
 		if opok = '0' then
@@ -474,23 +481,22 @@ begin
 		end if;
 
 		if opok = '1' and branch_t = '1' then
-			next_state <= MTRANS;
+			next_state <= BRANCH;
 		end if;
 
 		if opok = '1' and mult_t = '1' then
-			next_state <= MTRANS;
+			next_state <= MUL;
 		end if;
 
-		--LPC
-
-		if opok = '1' then
-			next_state <= RUN;
+		if opok = '1' and (rf_radr1 = X"F" or rf_radr2 = X"F") then
+			next_state <= PCADR;
 		end if;
 
 	when BRANCH =>
 		next_state <= FETCH;
 
 	when SWAP =>
+-- 		next_state <= RUN; ???
 
 	when MTRANS =>
 		if mtrans_t = '1' then -- /!\
@@ -503,7 +509,9 @@ begin
 			next_state <= RUN;
 		end if;
 
-		--LPC
+		if mtrans_next_reg = X"F" then
+			next_state <= PCADR;
+		end if;
 
 	when PCADR => -- à quoi donc sert-il ?
 		next_state <= PCLOAD;
@@ -527,7 +535,7 @@ begin
 end process;
 
 --Multiplication
-process(ck)
+process(ck, mulOk, mult_t)
 begin
 end process;
 

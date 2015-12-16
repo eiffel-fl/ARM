@@ -332,7 +332,7 @@ begin
 		op2_right <= op2_asr when dec_shift_asr = '1' else
 			op2_lsr when dec_shift_lsr = '1' else
 			op2_ror when dec_shift_ror = '1' else
-			'0';
+			X"00000000";
 
 		--! shifter result
 		op2_shift <= op2_lsl when dec_shift_lsl = '1' else
@@ -354,13 +354,13 @@ begin
 			op2_shift;
 
 		--operations simples
-		and32 <= op1 and op2 when dec_alu_and = '1' else '0';
-		or32 <= op1 or op2 when dec_alu_or = '1' else '0';
-		xor32 <= op1 xor op2 when dec_alu_xor = '1' else '0';
+		and32 <= op1 and op2 when dec_alu_and = '1' else X"00000000";
+		or32 <= op1 or op2 when dec_alu_or = '1' else X"00000000";
+		xor32 <= op1 xor op2 when dec_alu_xor = '1' else X"00000000";
 
 		exe_mem_adr <= alu_res;
 
-	--! Operations process
+	--! Fulladder
 	process(ck)
 	variable sout1 : std_logic_vector(31 downto 0);
 	variable sout : std_logic_vector(31 downto 0);
@@ -371,7 +371,7 @@ begin
 	begin
 		if rising_edge(ck) then
 			if dec_alu_add = '1' then
-				cout(0) := shift_cy;
+				cout(0) := dec_alu_cy;
 
 				for i in 0 to 31 loop
 					sout1(i) := op1(i) xor op2(i);
