@@ -1,7 +1,7 @@
-dec_alu_cy : carry d'entrée de l'alu ???
-Où mettre l'offset d'un branchement ?
-Comment sont utilisé les condtions ?
+Comment sont utilisées les condtions ?
 	si condition ok alors lancer op
 	sinon lancer nop
 Comment détecter les opérations sur PC ?
 	voir si numéro de registre est 15
+A quoi correspondent op1, 2 et 3 ?
+Pourquoi un and ou un xor se déguise en mul ???

@@ -181,7 +181,12 @@ begin
 	c <= exe_c when s_set_reg = '1' else c_reg;
 	v <= exe_v when s_set_reg = '1' else v_reg;
 
--- register file read
+-- rf_radr
+	rf_radr1 <= if_ir(19 downto 16);
+	rf_radr2 <= if_ir(15 downto 12);
+	rf_radr3 <= if_ir(3 downto 0);
+
+	-- register file read
 
 	rf_op1 <=	exe_alu_res		when r_dest_we_reg = '1' and r_dest_reg = rf_radr1		else
 					mem_commit_val	when mem_commit = '1' and mem_commit_reg = rf_radr1	else
@@ -197,6 +202,15 @@ begin
 					mem_commit_val when mem_commit = '1' and mem_commit_reg = rf_radr3	else
 					r_reg(to_integer(unsigned(rf_radr3)));
 
+-- op /!\
+	op1_reg <= rf_op2 when regop_t = '1' else
+		rf_op1 when mult_t = '1' else
+		rf_op2 when branch_t = '1';
+
+	op2_reg <= rf_op3 when regop_t = '1' or mult_t = '1' or swap_t = '1';
+
+	op3_reg <= rf_op1 when regop_t = '1' or swap_t = '1' or trans_t = '1' or mtrans_t = '1' else
+		rf_op2 when mult_t = '1';
 -- register file write
 
 process (ck)
@@ -249,15 +263,14 @@ end process;
 
 -- decod instruction type
 
-	regop_t <= '1' when	if_ir(27 downto 26) = "00" and
-								mult_t = '0' and swap_t = '0' else '0';
 	mult_t <= '1' when if_ir(27 downto 22) = "000000" else '0';
 	swap_t <= '1' when if_ir(27 downto 23) = "00010" else '0';
 	trans_t <= '1' when if_ir(27 downto 26) = "01" else '0';
 	branch_t <= '1' when if_ir(27 downto 25) = "101" else '0';
 	mtrans_t <= '1' when if_ir(27 downto 26) = "10" else '0';
+	regop_t <= '1' when if_ir(27 downto 26) = "00" and mult_t = '0' and swap_t = '0' else '0';
 
--- decod regop opcode
+-- regop instructions
 
 	and_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"0" else '0';
 	eor_i <= '1' when regop_t = '1' and if_ir(24 downto 21) = X"1" else '0';
@@ -305,13 +318,27 @@ end process;
 			dec_shift_ror <= '0';
 			dec_shift_rrx <= '0';
 		end if;
-	end process;
 
-	dec_shift_lsl <= '1' when regop_t = '1' and if_ir(6 downto 5) = X"0" else '0';
-	dec_shift_lsr <= '1' when regop_t = '1' and if_ir(6 downto 5) = X"1" else '0';
-	dec_shift_asr <= '1' when regop_t = '1' and if_ir(6 downto 5) = X"2" else '0';
-	dec_shift_ror <= '1' when regop_t = '1' and if_ir(6 downto 5) = X"3" and if_ir(11 downto 7) /= X"0" else '0';
-	dec_shift_rrx <= '1' when regop_t = '1' and if_ir(6 downto 5) = X"3" and if_ir(11 downto 7) = X"0" else '0';
+		if regop_t = '1' and if_ir(6 downto 5) = "00" then
+			dec_shift_lsl <= '1';
+		end if;
+
+		if regop_t = '1' and if_ir(6 downto 5) = "01" then
+			dec_shift_lsr <= '1';
+		end if;
+
+		if regop_t = '1' and if_ir(6 downto 5) = "10" then
+			dec_shift_asr <= '1';
+		end if;
+
+		if regop_t = '1' and if_ir(6 downto 5) = "11" and if_ir(11 downto 7) /= "00000" then
+			dec_shift_ror <= '1';
+		end if;
+
+		if regop_t = '1' and if_ir(6 downto 5) = "11" and if_ir(11 downto 7) = "00000" then
+			dec_shift_rrx <= '1';
+		end if;
+	end process;
 
 	dec_shift_val <= if_ir(11 downto 7) when regop_t = '1' and if_ir(4) = '0' else
 		r_reg(to_integer(signed(if_ir(11 downto 8))))(4 downto 0) when regop_t = '1' and if_ir(4) = '1' else
@@ -408,8 +435,6 @@ end process;
 								((next_state = MTRANS or cur_state = MTRANS) and ldm_i = '1') else '0';
 
 	dec_mem_data <= op3_reg;
-
-
 
 -- decod reg pipe
 -- output to exec
@@ -532,6 +557,17 @@ begin
 			next_state <= RUN;
 		end if;
 	end case;
+end process;
+
+--La condition n'est pas bonne, on lancera une "nop"
+process(ck, cond)
+begin
+-- 	if cond = '0' then
+-- 		dec_alu_add <= '0';
+-- 		dec_alu_or <= '1';
+-- 		dec_op1 <= r_reg(0);
+-- 		dec_op2 <= r_reg(0);
+-- 	end if;
 end process;
 
 --Multiplication

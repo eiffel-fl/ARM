@@ -70,7 +70,7 @@ end EXec;
 
 ----------------------------------------------------------------------
 
-architecture Behavior OF EXec is
+architecture Behavior OF Exec is
 	--! op2 pour les décalages
 	signal op2_lsl : std_logic_vector(31 downto 0);
 	signal op2_lsr : std_logic_vector(31 downto 0);
