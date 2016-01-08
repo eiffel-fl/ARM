@@ -189,7 +189,7 @@ begin
 
 	testBench : process
 	begin
-		if_ir <= X"E" & "000" & X"3" & "0" & X"1" & X"2" & X"0" & "0" & "11" & "0" & X"3";
+		if_ir <= X"E" & "000" & X"0" & "0" & X"1" & X"2" & X"0" & "0" & "11" & "0" & X"3";
 		ck <= '0';
 		wait for 2 ns;
 

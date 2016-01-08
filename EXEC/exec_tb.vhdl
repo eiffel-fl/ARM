@@ -216,10 +216,10 @@ begin
 		dec_alu_add <= '1';
 		dec_alu_cy <= '0';
 
-		dec_comp_op2 <= '1';
+		dec_comp_op2 <= '0';
 
-		dec_op1 <= x"00000000";
-		dec_op2 <= x"0000000F";
+		dec_op1 <= x"0000000F";
+		dec_op2 <= x"00000002";
 		ck <= '1';
 
 		wait for 2 ns;

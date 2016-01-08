@@ -94,12 +94,6 @@ architecture Behavior OF Exec is
 	signal op2 : std_logic_vector(31 downto 0);
 	signal op1 : std_logic_vector(31 downto 0);
 
-	--additionneur
-	signal p4b : std_logic_vector(7 downto 0);
-	signal g4b : std_logic_vector(7 downto 0);
-	signal p16b : std_logic_vector(1 downto 0);
-	signal g16b : std_logic_vector(1 downto 0);
-
 	--resultats
 	signal add32 : std_logic_vector(31 downto 0);
 	signal and32 : std_logic_vector(31 downto 0);
@@ -108,14 +102,6 @@ architecture Behavior OF Exec is
 	signal alu_res : std_logic_vector(31 downto 0);
 
 begin
-  exe_mem_data <= dec_mem_data;
-  exe_mem_dest <= dec_mem_dest;
-
-  exe_mem_lw <= dec_mem_lw;
-  exe_mem_lb <= dec_mem_lb;
-  exe_mem_sw <= dec_mem_sw;
-  exe_mem_sb <= dec_mem_sb;
-
 	--! LSL
 	with dec_shift_val select
 		op2_lsl <= dec_op2(0) & X"0000000" & "000" when "11111",
@@ -358,8 +344,6 @@ begin
 		or32 <= op1 or op2 when dec_alu_or = '1' else X"00000000";
 		xor32 <= op1 xor op2 when dec_alu_xor = '1' else X"00000000";
 
-		exe_mem_adr <= alu_res;
-
 	--! Fulladder
 	process(ck)
 	variable sout1 : std_logic_vector(31 downto 0);
@@ -369,25 +353,23 @@ begin
 	variable cout2 : std_logic_vector(31 downto 0);
 	variable cout : std_logic_vector(32 downto 0);
 	begin
-		if rising_edge(ck) then
-			if dec_alu_add = '1' then
-				cout(0) := dec_alu_cy;
+		if dec_alu_add = '1' then
+			cout(0) := dec_alu_cy;
 
-				for i in 0 to 31 loop
-					sout1(i) := op1(i) xor op2(i);
+			for i in 0 to 31 loop
+				sout1(i) := op1(i) xor op2(i);
 
-					cout1(i) := op1(i) and op2(i);
+				cout1(i) := op1(i) and op2(i);
 
-					sout(i) := cout(i) xor sout1(i);
-					cout2(i) := cout(i) and sout1(i);
+				sout(i) := cout(i) xor sout1(i);
+				cout2(i) := cout(i) and sout1(i);
 
-					cout(i + 1) := cout1(i) or cout2(i);
-				end loop;
+				cout(i + 1) := cout1(i) or cout2(i);
+			end loop;
 
-				add32 <= sout;
-				exe_c <= cout(32);
-				exe_v <= cout(32) xor cout(31);
-			end if;
+			add32 <= sout;
+			exe_c <= cout(32);
+			exe_v <= cout(32) xor cout(31);
 		end if;
 	end process;
 
@@ -403,14 +385,25 @@ begin
 
 	--! Flags process
 	process(ck) begin
-		if rising_edge(ck) then
-			if alu_res(31) = '1' then
-				exe_n <= '1';
-			end if;
+		if alu_res(31) = '1' then
+			exe_n <= '1';
+		end if;
 
-			if alu_res = X"00000000" then
-				exe_z <= '1';
-			end if;
+		if alu_res = X"00000000" then
+			exe_z <= '1';
+		end if;
+	end process;
+
+	process(ck) begin
+		if rising_edge(ck) then
+			exe_mem_adr <= alu_res;
+			exe_mem_data <= dec_mem_data;
+			exe_mem_dest <= dec_mem_dest;
+
+			exe_mem_lw <= dec_mem_lw;
+			exe_mem_lb <= dec_mem_lb;
+			exe_mem_sw <= dec_mem_sw;
+			exe_mem_sb <= dec_mem_sb;
 		end if;
 	end process;
 end Behavior;

@@ -115,14 +115,14 @@ signal ldm_i  : Std_Logic;
 signal stm_i  : Std_Logic;
 
 -- branch instruction
-signal b_i    : Std_Logic;
-signal bl_i   : Std_Logic;
-
--- RF
 type rf_array is array(14 downto 0) of std_logic_vector(31 downto 0);
 signal r_reg	: rf_array; --vrai registre
 signal r 		: rf_array; --"sortie" : on choisit entre le vrai registre et le bypass
 
+signal b_i    : Std_Logic;
+signal bl_i   : Std_Logic;
+
+-- RF
 signal r_valid : Std_Logic_Vector(14 downto 0);
 
 signal r_dest_reg : Std_Logic_Vector(3 downto 0);
@@ -185,6 +185,10 @@ begin
 	rf_radr1 <= if_ir(19 downto 16);
 	rf_radr2 <= if_ir(15 downto 12);
 	rf_radr3 <= if_ir(3 downto 0);
+
+-- opok
+	opok <= '0' when (r_valid(to_integer(unsigned (rf_radr1))) = '0' or r_valid(to_integer(unsigned (rf_radr3))) = '0') and if_ir(25) = '0' else
+		'1';
 
 	-- register file read
 
@@ -263,7 +267,7 @@ end process;
 
 -- decod instruction type
 
-	mult_t <= '1' when if_ir(27 downto 22) = "000000" else '0';
+	mult_t <= '1' when if_ir(27 downto 22) = "000000" and if_ir(7 downto 4) = "1001" else '0';
 	swap_t <= '1' when if_ir(27 downto 23) = "00010" else '0';
 	trans_t <= '1' when if_ir(27 downto 26) = "01" else '0';
 	branch_t <= '1' when if_ir(27 downto 25) = "101" else '0';
@@ -363,7 +367,7 @@ end process;
 				dec_comp_op2 <= '1';
 			end if;
 
-			if(mov_i = '1' or mvn_i = '1') then
+			if(mov_i = '1' or mvn_i = '1' or mul_i = '1') then
 				dec_zero_op1 <= '1';
 			end if;
 
@@ -396,6 +400,13 @@ end process;
 				dec_alu_or <= '1';
 				dec_alu_add <= '0';
 			end if;
+
+			if cond = '0' then
+				dec_alu_add <= '0';
+				dec_alu_or <= '1';
+				dec_op1 <= r_reg(0);
+				dec_op2 <= r_reg(0);
+			end if;
 		end if;
 	end process;
 
@@ -413,8 +424,18 @@ end process;
 								X"1" when mtrans_list(1) = '1' else
 								X"2" when mtrans_list(2) = '1' else
 								X"3" when mtrans_list(3) = '1' else
-								X"4" when mtrans_list(4) = '1';
-								--à compléter ???
+								X"4" when mtrans_list(4) = '1' else
+								X"5" when mtrans_list(5) = '1' else
+								X"6" when mtrans_list(6) = '1' else
+								X"7" when mtrans_list(7) = '1' else
+								X"8" when mtrans_list(8) = '1' else
+								X"9" when mtrans_list(9) = '1' else
+								X"A" when mtrans_list(10) = '1' else
+								X"B" when mtrans_list(11) = '1' else
+								X"C" when mtrans_list(12) = '1' else
+								X"D" when mtrans_list(13) = '1' else
+								X"E" when mtrans_list(14) = '1' else
+								X"F" when mtrans_list(15) = '1';
 
 -- Decod to mem via exec
 
@@ -557,17 +578,6 @@ begin
 			next_state <= RUN;
 		end if;
 	end case;
-end process;
-
---La condition n'est pas bonne, on lancera une "nop"
-process(ck, cond)
-begin
--- 	if cond = '0' then
--- 		dec_alu_add <= '0';
--- 		dec_alu_or <= '1';
--- 		dec_op1 <= r_reg(0);
--- 		dec_op2 <= r_reg(0);
--- 	end if;
 end process;
 
 --Multiplication
