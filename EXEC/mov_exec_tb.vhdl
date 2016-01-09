@@ -2,10 +2,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity add_exec_tb IS --nom de l'entity utilisé pour ghdl -e
-end add_exec_tb;
+entity mov_exec_tb IS --nom de l'entity utilisé pour ghdl -e
+end mov_exec_tb;
 
-architecture behavior OF add_exec_tb IS
+architecture behavior OF mov_exec_tb IS
 	component exec is
 	port(
 		--! Decode interface
@@ -213,9 +213,9 @@ begin
 		dec_shift_rrx <= '0';
 		dec_shift_val <= "00000";
 
-		dec_alu_add <= '1';
+		dec_alu_add <= '0';
 		dec_alu_and <= '0';
-		dec_alu_or  <= '0';
+		dec_alu_or <= '1';
 		dec_alu_xor <= '0';
 
 		dec_alu_cy <= '0';
@@ -223,8 +223,10 @@ begin
 		dec_comp_op1 <= '0';
 		dec_comp_op2 <= '0';
 
-		dec_op1 <= x"0000000F";
-		dec_op2 <= x"0000000F";
+		dec_zero_op1 <= '1';
+
+		dec_op1 <= x"FFFFFFFF";
+		dec_op2 <= x"12345678";
 		ck <= '1';
 
 		wait for 2 ns;

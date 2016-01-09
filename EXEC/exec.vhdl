@@ -282,7 +282,7 @@ begin
 
 	--! ROR
 	with dec_shift_val select
-		op2_ror <= dec_op2(30 downto 1) & dec_op2(31) when "11111",
+		op2_ror <= dec_op2(30 downto 0) & dec_op2(31) when "11111",
 		dec_op2(29 downto 0) & dec_op2(31 downto 30) when "11110",
 		dec_op2(28 downto 0) & dec_op2(31 downto 29) when "11101",
 		dec_op2(27 downto 0) & dec_op2(31 downto 28) when "11100",
