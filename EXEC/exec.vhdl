@@ -333,10 +333,13 @@ begin
 			dec_cy;
 
 		--complement
-		op1 <= (not dec_op1) xor X"00000001" when dec_comp_op1 = '1' else
+		-- (not dec_op1) xor X"00000001"
+		op1 <= std_logic_vector(unsigned(not dec_op1) + 1) when dec_comp_op1 = '1' and dec_op1 /= X"00000000" else
 			X"00000000" when dec_zero_op1 = '1' else
 			dec_op1;
-		op2 <= (not op2_shift) xor X"00000001" when dec_comp_op2 = '1' else
+
+		-- (not op2_shift) xor X"00000001"
+		op2 <= std_logic_vector(unsigned(not dec_op2) + 1) when dec_comp_op2 = '1' and dec_op2 /= X"00000000" else
 			op2_shift;
 
 		--operations simples
@@ -385,12 +388,16 @@ begin
 
 	--! Flags process
 	process(ck) begin
-		if alu_res(31) = '1' then
-			exe_n <= '1';
-		end if;
+		if rising_edge(ck) then
+			if alu_res(31) = '1' then
+				exe_n <= '1';
+			end if;
 
-		if alu_res = X"00000000" then
-			exe_z <= '1';
+			if alu_res = X"00000000" then
+				exe_z <= '1';
+			else
+				exe_z <= '0';
+			end if;
 		end if;
 	end process;
 

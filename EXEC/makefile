@@ -1,22 +1,22 @@
 CC=ghdl
+TB = $(basename $(wildcard *_tb.vhdl))
 
-all : exec_tb
-
-exec_tb : exec_tb.o
-	$(CC) -e exec_tb
-
-exec_tb.o : exec.o
-	$(CC) -a exec_tb.vhdl
+all : $(TB) clean
 
 exec.o :
 	$(CC) -a exec.vhdl
 
-exec :	exec_tb
-	-$$PWD/exec_tb --vcd=exec.vcd
+%_tb : %_tb.o
+	$(CC) -e $@
+	$(CC) -r $@ --vcd=$@.vcd
 
-clean : clean_o
-	ghdl --remove
-	rm exec.vcd
+%_tb.o : exec.o
+	$(CC) -a $(basename $@).vhdl
 
-clean_o :
+
+mrProper : clean
+	rm *.vcd
+
+clean :
 	ghdl --clean
+	ghdl --remove
