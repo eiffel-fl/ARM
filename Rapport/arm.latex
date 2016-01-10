@@ -2,6 +2,9 @@
 \usepackage[french]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage{multicol}
+\usepackage{tikz}
+\usepackage{float}
+\usetikzlibrary{arrows,automata}
 \usepackage{hyperref}
 \hypersetup{
 	colorlinks,
@@ -98,9 +101,53 @@ Dans ce rapport je présenterai d'abord les différents étages de notre process
 Cet étage a pour principale tâche d'aller lire dans le cache d'instructions la prochaine instruction à éxécuter.
 Une fois ceci fait il enverra à l'étage DECOD l'instruction lue.
 
-C'est aussi cet étage qui s'occupe de la gestion du registre \textbf{PC} (Program Counter) et qui répercute les cycles de gel sur la suite du pipeline.
+C'est aussi cet étage qui s'occupe de la gestion du registre \textbf{PC} (Program Counter) et qui répercute les cycles de gel sur la suite du pipeline notamment grâce à cette ligne :
+\begin{verbatim}
+if_ir_valid <= not ic_stall;
+\end{verbatim}
 
 \subsection{DECOD}
+\begin{figure}[H]
+	\begin{tikzpicture}[->, >= stealth, shorten >= 1pt, auto, node distance = 4cm, semithick, initial text = $\overline{RESET\_N}$, initial where = right]
+		\tikzstyle{every state} = [fill = white, draw = black, text = black]
+
+		\node [state] (A) {RUN};
+		\node [state] (B) [right of = A] {ADR};
+		\node [state] (C) [below of = A] {OPWAIT};
+		\node [state] (D) [left of = A] {MTRANS};
+		\node [state] (E) [above left of = A] {MUL};
+		\node [state] (F) [above of = A] {SWAP};
+		\node [state] (G) [below of = B] {ADR PC};
+		\node [state] (H) [right of = B] {LPC};
+		\node [initial, state] (I) [above of = B] {FETCH};
+
+		\path (A) edge [yellow, in = -30, out = -60, loop] node [yellow, pos = 0.33, sloped] {OPOK} (A)
+			edge node {BRANCH} (B)
+			edge node [sloped, pos = 0.1] {$\overline{OPOK}$} (C)
+			edge node {} (D)
+			edge [bend left, red] node [red, pos=0.8] {MUL} (E)
+			edge node [sloped, pos=0.8] {SWAP} (F)
+			edge [bend left] node {} (G)
+			(B) edge node {} (I)
+			(C) edge [loop left] node {$\overline{OPOK}$} (C)
+			edge [blue, bend left] node [blue] {OPOK} (A)
+			edge [green] node [green, sloped, pos = 0.9] {OPOK.BRANCH} (B)
+			edge node {} (D)
+			edge node {} (E)
+			(D) edge [loop left] node {} (D)
+			edge node {} (A)
+			edge node {} (C)
+			(E) edge [loop left] node {$\overline{MULOK}$} (E)
+			edge node [sloped, pos=0.1] {MULOK} (A)
+			(F) edge [loop left] node {$\overline{SWAPOK}$} (F)
+			edge [bend left] node [pos = 0.1] {SWAPOK} (A)
+			(G) edge node {} (H)
+			(H) edge node {} (I)
+			(I) edge node {} (A);
+	\end{tikzpicture}
+	\caption{Machine à état de DECOD (les couleurs servent uniquement à clarifier le dessin)}
+\end{figure}
+
 
 \subsection{EXE}
 

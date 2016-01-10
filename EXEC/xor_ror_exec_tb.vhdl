@@ -2,11 +2,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
---ne fonctionne pas : sign_op2 est calculé trop tôt du coup il n'a pas la bonne valeur...
-entity or_asr_exec_tb IS --nom de l'entity utilisé pour ghdl -e
-end or_asr_exec_tb;
+entity xor_ror_exec_tb IS --nom de l'entity utilisé pour ghdl -e
+end xor_ror_exec_tb;
 
-architecture behavior OF or_asr_exec_tb IS
+architecture behavior OF xor_ror_exec_tb IS
 	component exec is
 	port(
 		--! Decode interface
@@ -204,24 +203,20 @@ begin
 		ck <= '1';
 		wait for 2 ns;
 
-		dec_shift_asr <= '1';
-
-		dec_shift_val <= "00001";
-		dec_op2 <= "1000" & x"0000002";
-
 		ck <= '0';
 		wait for 2 ns;
 
 		dec_shift_lsl <= '0';
 		dec_shift_lsr <= '0';
-		dec_shift_ror <= '0';
+		dec_shift_asr <= '0';
+		dec_shift_ror <= '1';
 		dec_shift_rrx <= '0';
-
+		dec_shift_val <= "01000";
 
 		dec_alu_add <= '0';
 		dec_alu_and <= '0';
-		dec_alu_or <= '1';
-		dec_alu_xor <= '0';
+		dec_alu_or <= '0';
+		dec_alu_xor <= '1';
 
 		dec_alu_cy <= '0';
 
@@ -229,7 +224,7 @@ begin
 		dec_comp_op2 <= '0';
 
 		dec_op1 <= x"01000001";
-
+		dec_op2 <= x"000000FF";
 		ck <= '1';
 
 		wait for 2 ns;
