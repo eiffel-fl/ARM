@@ -176,6 +176,9 @@ begin
 
 -- Bypass or commit res
 
+	s_set_reg <= '1' when (if_ir(20) = '1' and (regop_t = '1' or mult_t = '1')) or tst_i = '1' or teq_i = '1' or cmp_i = '1' or cmn_i = '1' else
+		'0';
+
 	n <= exe_n when s_set_reg = '1' else n_reg;
 	z <= exe_z when s_set_reg = '1' else z_reg;
 	c <= exe_c when s_set_reg = '1' else c_reg;
@@ -208,16 +211,21 @@ begin
 
 -- op /!\
 -- 	op1 = Rn
-	op1_reg <= rf_op2 when regop_t = '1' else
-		rf_op1 when mult_t = '1' else
-		rf_op2 when branch_t = '1';
+	op1_reg <= rf_op1 when regop_t = '1' or swap_t = '1' or trans_t = '1' or mtrans_t = '1' else
+		rf_op2 when mult_t = '1' else
+		r_reg(14); --pc pour branch_t
 
 -- 	op2 = Rm
-	op2_reg <= rf_op3 when regop_t = '1' or mult_t = '1' or swap_t = '1';
+	op2_reg <= X"000000" & if_ir(7 downto 0) when if_ir(25) = '1' and regop_t = '1' else
+		rf_op3 when regop_t = '1' or mult_t = '1' or swap_t = '1' else
+		not rf_op3 when bic_i = '1' or mvn_i = '1' else
+		X"00" & if_ir(23 downto 0) when branch_t = '1'; --immediat branchement
+
 
 -- 	op3 = Rd
-	op3_reg <= rf_op1 when regop_t = '1' or swap_t = '1' or trans_t = '1' or mtrans_t = '1' else
-		rf_op2 when mult_t = '1';
+	op3_reg <= rf_op2 when regop_t = '1' or swap_t = '1' or trans_t = '1' or mtrans_t = '1' else
+		rf_op1 when mult_t = '1' else
+		r_reg(14); --pc pour branch_t
 -- register file write
 
 process (ck)
@@ -271,7 +279,7 @@ end process;
 -- decod instruction type
 
 	mult_t <= '1' when if_ir(27 downto 22) = "000000" and if_ir(7 downto 4) = "1001" else '0';
-	swap_t <= '1' when if_ir(27 downto 23) = "00010" else '0';
+	swap_t <= '1' when if_ir(27 downto 23) = "00010" and if_ir(11 downto 4) = "00001001" else '0';
 	trans_t <= '1' when if_ir(27 downto 26) = "01" else '0';
 	branch_t <= '1' when if_ir(27 downto 25) = "101" else '0';
 	mtrans_t <= '1' when if_ir(27 downto 26) = "10" else '0';
@@ -404,7 +412,7 @@ end process;
 				dec_alu_add <= '0';
 			end if;
 
-			if cond = '0' then
+			if cond = '0' then --pourquoi ça fait tout foirer ???
 				dec_alu_add <= '0';
 				dec_alu_or <= '1';
 				dec_op1 <= r_reg(0);
@@ -466,9 +474,7 @@ end process;
 -- Rn
 	dec_op1 <= op1_reg;
 -- Rm
-	dec_op2 <= X"00" & if_ir(23 downto 0) when branch_t = '1' else --offset branchement
-		X"000000" & if_ir(7 downto 0) when if_ir(25) = '1' and regop_t = '1' else --immediat
-		op2_reg; --le registre
+	dec_op2 <= op2_reg;
 
 -- 	dec_dest <= dest;
 -- 	dec_fset <= fset;
