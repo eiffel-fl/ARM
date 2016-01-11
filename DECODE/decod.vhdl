@@ -207,12 +207,15 @@ begin
 					r_reg(to_integer(unsigned(rf_radr3)));
 
 -- op /!\
+-- 	op1 = Rn
 	op1_reg <= rf_op2 when regop_t = '1' else
 		rf_op1 when mult_t = '1' else
 		rf_op2 when branch_t = '1';
 
+-- 	op2 = Rm
 	op2_reg <= rf_op3 when regop_t = '1' or mult_t = '1' or swap_t = '1';
 
+-- 	op3 = Rd
 	op3_reg <= rf_op1 when regop_t = '1' or swap_t = '1' or trans_t = '1' or mtrans_t = '1' else
 		rf_op2 when mult_t = '1';
 -- register file write
@@ -460,10 +463,12 @@ end process;
 -- decod reg pipe
 -- output to exec
 
+-- Rn
 	dec_op1 <= op1_reg;
+-- Rm
 	dec_op2 <= X"00" & if_ir(23 downto 0) when branch_t = '1' else --offset branchement
 		X"000000" & if_ir(7 downto 0) when if_ir(25) = '1' and regop_t = '1' else --immediat
-		op2_reg;
+		op2_reg; --le registre
 
 -- 	dec_dest <= dest;
 -- 	dec_fset <= fset;

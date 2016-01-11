@@ -2,10 +2,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity decod_tb2 IS --nom de l'entity utilisé pour ghdl -e
-end decod_tb2;
+entity stm_A_C842_decod_tb IS --nom de l'entity utilisé pour ghdl -e
+end stm_A_C842_decod_tb;
 
-architecture behavior OF decod_tb2 IS
+architecture behavior OF stm_A_C842_decod_tb IS
 	component decod is
 	port(
 		-- Exec  operands
@@ -189,7 +189,7 @@ begin
 
 	testBench : process
 	begin
-		if_ir <= X"E" & "000" & X"0" & "0" & X"1" & X"2" & X"0" & "0" & "11" & "0" & X"3";
+		if_ir <= X"0" & X"80" & X"A" & X"1114";
 		ck <= '0';
 		wait for 2 ns;
 
