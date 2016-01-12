@@ -1,0 +1,70 @@
+%% Creator: Inkscape inkscape 0.48.4, www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'EXE.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{987.63792324bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,0.77433487)%
+    \put(0,0){\includegraphics[width=\unitlength]{EXE.pdf}}%
+    \put(0.44867239,0.59955022){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{XNOR}}}%
+    \put(0.43435328,0.24873108){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{XNOR}}}%
+    \put(0.05680503,0.26543672){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{DEC\_OP1}}}%
+    \put(0.006688,0.23584379){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{DEC\_COMP\_OP1}}}%
+    \put(0.01671141,0.76231123){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{DEC\_COMP\_OP2}}}%
+    \put(0.07637453,0.58570839){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{DEC\_OP2}}}%
+    \put(0.00334687,0.00864664){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{DEC\_MEM\_*}}}%
+    \put(0.90635011,0.00382067){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{EXE\_MEM\_*}}}%
+    \put(0.01957524,0.51458994){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{DEC\_SHIFT\_VAL}}}%
+    \put(0.01773883,0.39275962){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{DEC\_SHIFT\_TYPE}}}%
+    \put(0.02807079,0.33444824){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{DEC\_ZERO\_OP1}}}%
+    \put(0.47868051,0.19014705){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{0}}}%
+    \put(0.00239226,0.09694804){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{DEC\_ALU\_CY}}}%
+    \put(0.90562503,0.50284596){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{EXE\_FLAGS}}}%
+    \put(0.9059626,0.46403282){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{EXE\_RES}}}%
+    \put(-0.00158997,0.03573823){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{EXE\_ALU\_RES}}}%
+  \end{picture}%
+\endgroup%

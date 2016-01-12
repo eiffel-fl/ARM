@@ -483,7 +483,6 @@ end process;
 
 process (ck)
 begin
-
 if (rising_edge(ck)) then
 	if (reset_n = '0') then
 		cur_state <= FETCH;
@@ -491,7 +490,6 @@ if (rising_edge(ck)) then
 		cur_state <= next_state;
 	end if;
 end if;
-
 end process;
 
 --state machine process.
