@@ -2,7 +2,13 @@
 \usepackage[french]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage{multicol}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage[absolute,overlay]{textpos}
+\usepackage{pdfpages}
 \usepackage{tikz}
+\usepackage{circuitikz}
+\usetikzlibrary{circuits.logic.IEC,calc}
 \usepackage{float}
 \usetikzlibrary{arrows,automata}
 \usepackage{hyperref}
@@ -33,8 +39,7 @@ Rapport présentant la micro architure de l'ARM v2A
 
 \section{Introduction}
 \subsection{L'UE VLSI}
-Dans le cadre du cours d'\textit{initiation à la conception \textbf{Very Large Scale Integration (VLSI)}} il m'a été demandé de réaliser une architecture simplifiée d'un processeur basée sur celle de l'ARM v2A.
-
+Dans le cadre du cours d'\textit{initiation à la conception \textbf{Very Large Scale Integration (VLSI)}} il m'a été demandé de réaliser une architecture simplifiée d'un processeur basée sur celle de l'ARM v2A.\\
 Pour la modélisation j'ai utilisé le langage \textbf{Very High Speed Integrated Circuit Hardware Description Language (VHDL)} ainsi que différents outils dont voici la liste :
 \begin{description}
 \item[\href{http://ghdl.free.fr/}{ghdl}] : un compilateur vhdl libre basé sur gnat
@@ -43,14 +48,13 @@ Pour la modélisation j'ai utilisé le langage \textbf{Very High Speed Integrate
 \end{description}
 
 \subsection{L'ARM v2A}
-Le processeur étudié est un processeur \textbf{Reduced Instruction Set Computer} (RISC) 32 bits comportant un pipeline découpé en 5 étages (IFETCH, DECOD, EXE, MEM, WBK). C'est un processeur ARM par conséquent son jeu d'instructions s'appuie sur une gestion élégante des conditions qui sont symbolisées par 4 registres d'un bit appelés ``flags'':
+Le processeur étudié est un processeur \textbf{Reduced Instruction Set Computer} (RISC) 32 bits comportant un pipeline découpé en 5 étages (IFETCH, DECOD, EXE, MEM, WBK). C'est un processeur ARM par conséquent son jeu d'instructions s'appuie sur une gestion élégante des conditions qui sont symbolisées par 4 registres d'un bit appelés ``flags'' :
 \begin{description}
 \item[N] : ce flag est positionné si une instruction a produit un résultat négatif
 \item[Z] : ce flag sera positionné par une instruction ayant produit un résultat nul
 \item[C] : ce flag sera levé lorsqu'une opération non signée produit un dépassement de capacité
 \item[V] : le flag V agit identiquement au flag C mais dans le cas d'opérations signées\\
 \end{description}
-
 Grâce à ces flags il est possible de conditionner chaque opération, voici un petit aperçu de la puissance de ce langage d'assemblage face à celui de l'architecture MIPS:
 \begin{verbatim}
 	#code C
@@ -100,6 +104,14 @@ Dans ce rapport je présenterai d'abord les différents étages de notre process
 \subsection{IFECTH}
 Cet étage a pour principale tâche d'aller lire dans le cache d'instructions la prochaine instruction à éxécuter.
 Une fois ceci fait il enverra à l'étage DECOD l'instruction lue.
+\begin{figure}
+	\centering
+	\def\svgwidth{\columnwidth}
+	\scriptsize{
+		\input{IFETCH.pdf_tex}
+	}
+	\caption{Schéma de l'étage IFETCH (les couleurs servent uniquement à clarifier le dessin)}
+\end{figure}
 
 C'est aussi cet étage qui s'occupe de la gestion du registre \textbf{PC} (Program Counter) et qui répercute les cycles de gel sur la suite du pipeline notamment grâce à cette ligne :
 \begin{verbatim}
@@ -107,6 +119,21 @@ if_ir_valid <= not ic_stall;
 \end{verbatim}
 
 \subsection{DECOD}
+C'est dans cet étage du pipeline que seront décodées les instructions venant de l'étage IFETCH.\\
+Les instructions sont codées sur 32 bits, il existe plusieurs types d'instructions dont notamment :
+\begin{description}
+\item[REGOP] : Les instructions de \textbf{Data Processing}, ce sont les instructions classiques comme add, or ou and.
+\item[MULT] : Instruction de multiplication, il existe une version utilisant 4 registres où une accumulation sera faite.
+\item[TRANS] : Les instructions de transfert tels quels sdrb ou ldr.
+\item[BRANCH] : Les instructions de branchement.
+\end{description}
+
+La condition d’exécution des instructions est toujours codée sur les 4 premiers bits (31 .. 28).
+
+Par exemple un \textbf{addnes R1, R2, R3} aura pour codage :\\
+\textbf{0001 0000 1001 0010 0001 0000 0000 0011}\\
+Et ce code \textbf{0000 0000 0000 1000 0000 0100 1001 0001} correspond à un \textbf{muleq R8, R1, R4}.
+
 \begin{figure}[H]
 	\begin{tikzpicture}[->, >= stealth, shorten >= 1pt, auto, node distance = 4cm, semithick, initial text = $\overline{RESET\_N}$, initial where = right]
 		\tikzstyle{every state} = [fill = white, draw = black, text = black]
