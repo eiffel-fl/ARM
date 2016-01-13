@@ -1,0 +1,2 @@
+Il y a un makefile pour DECOD et un pour EXEC.
+En lançant juste make il va générer tous les fichiers .vcd de l'étage en question.
