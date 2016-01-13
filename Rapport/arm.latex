@@ -35,7 +35,7 @@
 	\section{Introduction}
 		\subsection{L'UE VLSI}
 			Dans le cadre du cours d'\textit{initiation à la conception \textbf{Very Large Scale Integration (VLSI)}} il m'a été demandé de réaliser une architecture simplifiée d'un processeur basée sur celle de l'ARM v2A.\\
-			Pour la modélisation j'ai utilisé le langage \textbf{Very High Speed Integrated Circuit Hardware Description Language (VHDL)} ainsi que différents outils dont voici la liste :
+			Pour la modélisation, j'ai utilisé le langage \textbf{Very High Speed Integrated Circuit Hardware Description Language (VHDL)} ainsi que différents outils dont voici la liste :
 			\begin{description}
 				\item[\href{http://ghdl.free.fr/}{ghdl}] : un compilateur vhdl libre basé sur gnat
 				\item[\href{http://gtkwave.sourceforge.net/}{gtkwave}] : un outil libre de visualisation de simulation
@@ -88,7 +88,7 @@
 				\end{verbatim}
 			\end{multicols}
 
-			Pour cet \textbf{exemple} il est clair que même en optimisant le code de l'assembleur MIPS le code ARM sera meilleur en terme de cycles par instruction. Bien entendu il est impossible d'affirmer qu'en \textbf{général} un langage d'assemblage est meilleur qu'un autre surtout que le nombre de cycles n'est pas la seule variable à prendre en compte.
+			Pour cet \textbf{exemple} il est clair que même en optimisant le code de l'assembleur MIPS le code ARM sera meilleur en terme de cycles par instruction. Bien entendu, il est impossible d'affirmer qu'en \textbf{général} un langage d'assemblage est meilleur qu'un autre. Surtout que le nombre de cycles n'est pas la seule variable à prendre en compte.
 
 			La modélisation de ce processeur aurait du m'amener à obtenir le dessin des masques en utilisant les outils Alliance sur le code VHDL écrit.
 			Malheureusement la simulation ne s'est pas déroulée comme prévu et je n'ai pas pu obtenir ces dessins...
@@ -119,7 +119,7 @@
 			\begin{description}
 				\item[REGOP] : Les instructions de \textbf{Data Processing}, ce sont les instructions classiques comme add, or ou and.
 				\item[MULT] : Instruction de multiplication, il existe une version utilisant 4 registres où le dernier registre sera accumulé au résultat ($dest = op1 * op2 + op3$).
-				\item[TRANS] : Les instructions de transfert tels quels sdrb ou ldr.
+				\item[TRANS] : Les instructions de transfert tels quels STRB ou LDR.
 				\item[BRANCH] : Les instructions de branchement.
 			\end{description}
 			La condition d’exécution des instructions est toujours codée sur les 4 premiers bits (31 .. 28).\\
@@ -132,7 +132,7 @@
 				\item Un simple immédiat.
 				\item Un simple registre.
 				\item Un registre décalé d'une valeur sur 5 bits (donc de 0 à 31).
-				\item Un registre décalé de la valeur contenue dans un registre.
+				\item Un registre décalé de la valeur contenue dans un registre.\\
 			\end{itemize}
 			Pour mon architecture le dernier cas ne fonctionne pas...
 			
@@ -152,7 +152,7 @@
 				SUB R10, R5, R11
 			\end{verbatim}
 			Il y a clairement une dépendance de données entre ces instructions sur le registre R5. Par conséquent tant que l'instruction ADD n'aura pas produit son résultat il sera impossible de lancer l'instruction SUB. Donc pendant ce temps le prochain état (comprendre l'état de DECOD pour l'instruction SUB) sera OPWAIT.\\
-			J'ai complété le code du process gérant la machine à état mais je n'ai pas vérifié son fonctionnement par conséquent je ne pense pas qu'elle fonctionne.
+			J'ai complété le code du process gérant la machine à état mais je n'ai pas vérifié son fonctionnement. Par conséquent je ne pense pas qu'elle fonctionne.
 			\begin{figure}[H]
 				\begin{tikzpicture}[->, >= stealth, shorten >= 1pt, auto, node distance = 4cm, semithick, initial text = $\overline{RESET\_N}$, initial where = right]
 					\tikzstyle{every state} = [fill = white, draw = black, text = black]
@@ -195,25 +195,25 @@
 			\end{figure}
 
 		\subsection{EXE}
-			C'est ici qu'aura lieu l'exécution de nos instructions ainsi que les décalages. Dans notre processeur nous avons décidé d'implémenter réellement que 4 instructions : add, or, xor et and.
+			C'est ici, qu'aura lieu l'exécution de nos instructions ainsi que les décalages. Dans notre processeur,  nous avons décidé d'implémenter réellement que 4 instructions : add, or, xor et and.
 			
-			En effet à partir de ces 4 instructions il est possible de recréer toutes les REGOP, par exemple un sub ne sera en réalité qu'un add dont le second opérande aura été complémenté à 2 afin d'obtenir son négatif.
+			En effet, à partir de ces 4 instructions, il est possible de recréer toutes les REGOP. Par exemple, un sub ne sera en réalité qu'un add dont le second opérande aura été complémenté à 2 afin d'obtenir son négatif.
 			
-			En VHDL il existe les opérateurs and, or et xor par conséquent les instructions correspondantes sont facilement réalisable.
+			En VHDL, il existe les opérateurs and, or et xor, par conséquent les instructions correspondantes sont facilement réalisable.
 			
-			Par contre ce n'est pas le cas de l'addition puisque l'addition n'est pas définie entre des objets du types std\_logic\_vector, il aurait donc fallu convertir ces objets ce qui aurait sûrement posé problème lors de la synthèse.
+			Par contre, ce n'est pas le cas de l'addition puisque l'addition n'est pas définie entre des objets du types \textbf{std\_logic\_vector}. Il aurait donc fallu convertir ces objets, ce qui aurait sûrement posé problème lors de la synthèse.
 			
-			Pour pallier à cela il a fallu utiliser une autre stratégie. La stratégie la plus optimale aurait été d'utiliser un additionneur de type \textbf{Carry-lookahead} mais je ne suis pas arrivé à développer cette solution.
+			Pour pallier à cela, il a fallu utiliser une autre stratégie. Optimalement il aurait fallu utiliser un additionneur de type \textbf{Carry-lookahead} mais je ne suis pas arrivé à développer cette solution.
 			Je me suis donc rabattu sur un additionneur complet 1 bit itéré 32 fois...
 			\begin{multicols}{2}
 				\begin{figure}[H]
-				\centering
-				\def\svgwidth{\columnwidth}
-				\tiny{
-					\input{Full-adder.pdf_tex}
-				}
-				\caption{Schéma d'un additionneur complet}
-			\end{figure}
+					\centering
+					\def\svgwidth{\columnwidth}
+					\tiny{
+						\input{Full-adder.pdf_tex}
+					}
+					\caption{Schéma d'un additionneur complet}
+				\end{figure}
 				\columnbreak
 				\begin{verbatim}
 					--code du fulladder
@@ -232,7 +232,7 @@
 				\end{verbatim}
 			\end{multicols}
 
-			D'après mes tests toutes les REGOP donnent un résultat correct.\\
+			D'après mes tests, toutes les REGOP donnent un résultat correct.\\
 			Cet étage comporte aussi un bypass (\textbf{EXE\_ALU\_RES} sur la figure 4) afin de limiter les cycles de gel.
 			\begin{figure}[H]
 				\centering
@@ -248,13 +248,13 @@
 			C'est dans cet étage que les instructions STR et LDR prennent tout leur sens. En effet l'adresse calculée à l'étage EXE ainsi que la potentielle donnée à stocker seront envoyées au cache de données via cet étage.
 			
 	\section{Conclusion}
-		Il est clair que les objectifs de l'UE n'ont pas été atteints, la synthèse n'a pu être mené à terme mais l'architecture présenté n'est clairement pas complète.
+		Il est clair que les objectifs de l'UE n'ont pas été atteints, la synthèse n'a pu être menée à terme et l'architecture présentée n'est clairement pas complète.\\
 		Les deux principales fonctions de cette architecture sont :
 		\begin{itemize}
 			\item Le décodage des instructions
-			\item Les opérations et presque tous les décalages de l'étage EXEC
+			\item Les opérations et presque tous les décalages de l'étage EXEC\\
 		\end{itemize}
-		Pourtant cette UE m'a permis d'apprendre le VHDL qui est un langage très particulier, en effet la modélisation est très différente de la programmation. De plus même s'il est possible d'utiliser des algorithmes ceci sont très différents de ceux que j'ai l'habitude d'utilisé puisqu'ils sont plus bas niveau.
+		Pourtant, cette UE m'a permis d'apprendre le VHDL qui est un langage très particulier. En effet la modélisation est très différente de la programmation. De plus même s'il est possible d'utiliser des algorithmes, ceci sont très différents de ceux que j'ai l'habitude d'utiliser puisqu'ils sont plus bas niveau.
 		
 		Le VHDL permet de se placer au niveau des bits là où les langages de programmation classiques sont limités à l'octet.
 		

@@ -50,8 +50,8 @@
   \makeatother%
   \begin{picture}(1,0.77433487)%
     \put(0,0){\includegraphics[width=\unitlength]{EXE.pdf}}%
-    \put(0.44867239,0.59955022){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{XNOR}}}%
-    \put(0.43435328,0.24873108){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{XNOR}}}%
+    \put(0.44867239,0.59955022){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{XOR}}}%
+    \put(0.43435328,0.24873108){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{XOR}}}%
     \put(0.05680503,0.26543672){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{DEC\_OP1}}}%
     \put(0.006688,0.23584379){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{DEC\_COMP\_OP1}}}%
     \put(0.01671141,0.76231123){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{DEC\_COMP\_OP2}}}%
